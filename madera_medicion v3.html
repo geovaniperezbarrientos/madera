@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="theme-color" content="#D4882A"/>
+<title>Medicion de Madera</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#1a1a1a;color:#f5e6c8;font-family:Arial,sans-serif;min-height:100vh}
+
+header{background:#2c1810;border-bottom:2px solid #8b6914;padding:14px 16px;position:sticky;top:0;z-index:10}
+.titulo{font-size:16px;font-weight:bold;color:#d4882a;letter-spacing:2px;margin-bottom:10px}
+.total-label{font-size:11px;color:#8b6914;letter-spacing:2px;text-transform:uppercase}
+.total-num{font-size:52px;font-weight:bold;color:#d4882a;line-height:1}
+.total-unit{font-size:20px;color:#bfa882;margin-left:6px}
+.n-piezas{font-size:12px;color:#bfa882;margin-top:2px}
+
+.form-wrap{padding:14px 14px 0}
+.form-box{background:#3d2b1f;border:1px solid #8b6914;border-radius:12px;padding:14px}
+.form-titulo{font-size:11px;color:#8b6914;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.inp-grupo label{display:block;font-size:11px;color:#bfa882;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.inp-grupo input{
+  display:block;width:100%;
+  background:#2c1810;border:2px solid #8b6914;border-radius:8px;
+  color:#f5e6c8;font-size:26px;font-weight:bold;text-align:center;
+  padding:10px 2px;outline:none;
+  -webkit-appearance:none;appearance:none;
+}
+.inp-grupo input:focus{border-color:#d4882a}
+
+.preview{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;min-height:26px}
+.preview-lbl{font-size:12px;color:#bfa882}
+.preview-val{font-size:20px;font-weight:bold;color:#d4882a;font-family:monospace}
+.preview-vacio{color:#4a3525}
+
+.btn-agregar{
+  width:100%;background:#d4882a;color:#1a1a1a;border:none;border-radius:10px;
+  font-size:18px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;
+  padding:14px;cursor:pointer
+}
+.btn-agregar:active{background:#b8741f}
+
+.lista-wrap{padding:12px 14px 130px}
+.lista-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.lista-titulo{font-size:11px;color:#8b6914;letter-spacing:2px;text-transform:uppercase}
+.btn-borrar-todo{font-size:12px;color:#c0392b;background:none;border:1px solid #c0392b;border-radius:6px;padding:4px 10px;cursor:pointer}
+
+.vacio{text-align:center;padding:36px 16px;color:#4a3525}
+.vacio-icono{font-size:44px;margin-bottom:10px}
+.vacio p{font-size:14px;line-height:1.6}
+
+.pieza{background:#3d2b1f;border:1px solid #4a3525;border-radius:10px;padding:11px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.pieza-num{font-size:12px;color:#8b6914;min-width:26px;text-align:center;font-weight:bold}
+.pieza-dims{flex:1;font-size:14px;color:#bfa882;font-family:monospace}
+.pieza-dims b{color:#f5e6c8}
+.sep{color:#8b6914;margin:0 3px}
+.pieza-pies{font-size:26px;font-weight:bold;color:#d4882a;min-width:50px;text-align:right}
+.pieza-pies-u{font-size:10px;color:#bfa882;display:block;text-align:right}
+.btn-del{background:none;border:none;color:#5a4030;font-size:22px;padding:2px 6px;cursor:pointer;line-height:1}
+.btn-del:active{color:#c0392b}
+
+.barra{position:fixed;bottom:0;left:0;right:0;background:#2c1810;border-top:2px solid #8b6914;padding:12px 14px;display:flex;gap:10px}
+.btn-excel{flex:1;background:#3d2b1f;color:#d4882a;border:1.5px solid #8b6914;border-radius:10px;font-size:15px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;padding:13px;cursor:pointer}
+.btn-excel:active{background:#2a1810}
+.btn-nueva{flex:1;background:transparent;color:#bfa882;border:1.5px solid #4a3525;border-radius:10px;font-size:15px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;padding:13px;cursor:pointer}
+.btn-nueva:active{background:#2a1810}
+
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:#d4882a;color:#1a1a1a;font-size:14px;font-weight:bold;padding:11px 22px;border-radius:50px;z-index:999;transition:transform 0.3s;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="titulo">MADERA PIES</div>
+  <div class="total-label">Total acumulado</div>
+  <div>
+    <span class="total-num" id="totalNum">0</span>
+    <span class="total-unit">pies</span>
+  </div>
+  <div class="n-piezas" id="nPiezas">0 piezas</div>
+</header>
+
+<div class="form-wrap">
+  <div class="form-box">
+    <div class="form-titulo">Nueva pieza</div>
+    <div class="inputs">
+      <div class="inp-grupo">
+        <label>Largo</label>
+        <input id="iLargo" type="tel" placeholder="0" inputmode="numeric"/>
+      </div>
+      <div class="inp-grupo">
+        <label>Ancho</label>
+        <input id="iAncho" type="tel" placeholder="0" inputmode="numeric"/>
+      </div>
+      <div class="inp-grupo">
+        <label>Alto</label>
+        <input id="iAlto" type="tel" placeholder="0" inputmode="numeric"/>
+      </div>
+    </div>
+    <div class="preview">
+      <span class="preview-lbl">Vista previa:</span>
+      <span class="preview-val preview-vacio" id="prevVal">-- pies</span>
+    </div>
+    <button class="btn-agregar" id="btnAgregar">+ AGREGAR PIEZA</button>
+  </div>
+</div>
+
+<div class="lista-wrap">
+  <div class="lista-top">
+    <span class="lista-titulo">Piezas registradas</span>
+    <button class="btn-borrar-todo" id="btnBorrarTodo">Borrar todo</button>
+  </div>
+  <div id="lista"></div>
+</div>
+
+<div class="barra">
+  <button class="btn-excel" id="btnExcel">Exportar Excel</button>
+  <button class="btn-nueva" id="btnNueva">Nueva sesion</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+var piezas = [];
+
+function calcPies(l,a,h){ return Math.floor(l*a*h/12); }
+
+function getVal(id){ return parseInt(document.getElementById(id).value) || 0; }
+
+function actualizarPreview(){
+  var l=getVal('iLargo'), a=getVal('iAncho'), h=getVal('iAlto');
+  var el=document.getElementById('prevVal');
+  if(l>0 && a>0 && h>0){
+    el.textContent = calcPies(l,a,h)+' pies';
+    el.className='preview-val';
+  } else {
+    el.textContent='-- pies';
+    el.className='preview-val preview-vacio';
+  }
+}
+
+function renderizar(){
+  var total=0;
+  for(var i=0;i<piezas.length;i++) total+=piezas[i].pies;
+  document.getElementById('totalNum').textContent=total;
+  document.getElementById('nPiezas').textContent=piezas.length+(piezas.length===1?' pieza':' piezas');
+
+  var lista=document.getElementById('lista');
+  if(piezas.length===0){
+    lista.innerHTML='<div class="vacio"><div class="vacio-icono">📏</div><p>Ingresa Largo, Ancho y Alto<br>para agregar la primera pieza.</p></div>';
+    return;
+  }
+  var html='';
+  for(var i=0;i<piezas.length;i++){
+    var p=piezas[i];
+    html+='<div class="pieza">'
+      +'<div class="pieza-num">#'+(i+1)+'</div>'
+      +'<div class="pieza-dims"><b>'+p.l+'</b><span class="sep">x</span><b>'+p.a+'</b><span class="sep">x</span><b>'+p.h+'</b></div>'
+      +'<div><div class="pieza-pies">'+p.pies+'</div><span class="pieza-pies-u">pies</span></div>'
+      +'<button class="btn-del" onclick="eliminar('+i+')">x</button>'
+      +'</div>';
+  }
+  lista.innerHTML=html;
+}
+
+function eliminar(idx){
+  piezas.splice(idx,1);
+  renderizar();
+}
+
+function toast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast show';
+  setTimeout(function(){ t.className='toast'; },2200);
+}
+
+document.getElementById('btnAgregar').onclick=function(){
+  var l=getVal('iLargo'), a=getVal('iAncho'), h=getVal('iAlto');
+  if(!l||!a||!h){ toast('Completa los 3 campos'); return; }
+  piezas.push({l:l,a:a,h:h,pies:calcPies(l,a,h)});
+  document.getElementById('iLargo').value='';
+  document.getElementById('iAncho').value='';
+  document.getElementById('iAlto').value='';
+  document.getElementById('prevVal').textContent='-- pies';
+  document.getElementById('prevVal').className='preview-val preview-vacio';
+  renderizar();
+  document.getElementById('iLargo').focus();
+};
+
+document.getElementById('iLargo').oninput=actualizarPreview;
+document.getElementById('iAncho').oninput=actualizarPreview;
+document.getElementById('iAlto').oninput=actualizarPreview;
+document.getElementById('iLargo').onchange=actualizarPreview;
+document.getElementById('iAncho').onchange=actualizarPreview;
+document.getElementById('iAlto').onchange=actualizarPreview;
+
+document.getElementById('btnBorrarTodo').onclick=function(){
+  if(piezas.length===0){ toast('No hay piezas'); return; }
+  if(confirm('Borrar las '+piezas.length+' piezas?')){
+    piezas=[];
+    renderizar();
+    toast('Lista borrada');
+  }
+};
+
+document.getElementById('btnNueva').onclick=function(){
+  if(piezas.length===0){ toast('No hay piezas'); return; }
+  if(confirm('Nueva sesion? Se borraran las '+piezas.length+' piezas actuales.')){
+    piezas=[];
+    renderizar();
+    toast('Nueva sesion iniciada');
+  }
+};
+
+document.getElementById('btnExcel').onclick=function(){
+  if(piezas.length===0){ toast('No hay piezas'); return; }
+  if(typeof XLSX==='undefined'){ toast('Sin conexion, intenta luego'); return; }
+  var total=0;
+  var filas=[['N Pieza','Largo','Ancho','Alto','Pies']];
+  for(var i=0;i<piezas.length;i++){
+    var p=piezas[i];
+    total+=p.pies;
+    filas.push([i+1, p.l, p.a, p.h, p.pies]);
+  }
+  filas.push(['TOTAL','','','',total]);
+  var ws=XLSX.utils.aoa_to_sheet(filas);
+  ws['!cols']=[{wch:10},{wch:10},{wch:10},{wch:10},{wch:10}];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Medicion');
+  var fecha=new Date().toLocaleDateString('es').replace(/\//g,'-');
+  XLSX.writeFile(wb,'madera_'+fecha+'.xlsx');
+  toast('Excel exportado');
+};
+
+renderizar();
+</script>
+</body>
+</html>
